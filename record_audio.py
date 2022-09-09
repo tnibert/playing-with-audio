@@ -3,6 +3,11 @@ import pyaudio
 import wave
 
 FNAME = 'audio-recording.wav'
+SECONDS = 2
+RATE = 48000
+CHANNELS = 2
+FORMAT = pyaudio.paInt16
+FRAMES_PER_BUFFER = 1024
 
 """print some info about the environment"""
 
@@ -23,18 +28,19 @@ for id in range(pa.get_device_count()):
       print(key, value)
 
 """record some audio"""
-print("recording...")
+
+print("\n\nrecording...")
 stream_in = pa.open(
-    rate=48000,
-    channels=2,
-    format=pyaudio.paInt16,
+    rate=RATE,
+    channels=CHANNELS,
+    format=FORMAT,
     input=True,                   # input stream flag
     input_device_index=pa.get_default_input_device_info()["index"],         # input device index
-    frames_per_buffer=1024
+    frames_per_buffer=FRAMES_PER_BUFFER
 )
 
 # read 5 seconds of the input stream
-input_audio = stream_in.read(5 * 48000)
+input_audio: bytes = stream_in.read(SECONDS * RATE)
 
 # save the recorded audio
 wav_file = wave.open(FNAME, 'wb')
@@ -42,26 +48,28 @@ wav_file = wave.open(FNAME, 'wb')
 # define audio stream properties
 wav_file.setnchannels(2)        # number of channels
 wav_file.setsampwidth(2)        # sample width in bytes
-wav_file.setframerate(48000)    # sampling rate in Hz
+wav_file.setframerate(RATE)    # sampling rate in Hz
 
 # write samples to the file
 wav_file.writeframes(input_audio)
 
 """play it back"""
-# todo: play directly from input_audio
-print(type(input_audio))
+
 print("playing back...")
 
-wav_file = wave.open(FNAME)
+#wav_file = wave.open(FNAME)
+#print(type(wav_file))
 
 stream_out = pa.open(
-    rate=wav_file.getframerate(),     # sampling rate
-    channels=wav_file.getnchannels(), # number of output channels
-    format=pa.get_format_from_width(wav_file.getsampwidth()),  # sample format and length
+    rate=RATE, #wav_file.getframerate(),     # sampling rate
+    channels=CHANNELS, #wav_file.getnchannels(), # number of output channels
+    format=FORMAT, #pa.get_format_from_width(wav_file.getsampwidth()),  # sample format and length
     output=True,             # output stream flag
     output_device_index=pa.get_default_output_device_info()["index"],   # output device index
-    frames_per_buffer=1024,  # buffer length
+    frames_per_buffer=FRAMES_PER_BUFFER  # buffer length
 )
 
-output_audio = wav_file.readframes(5 * wav_file.getframerate())
-stream_out.write(output_audio)
+#output_audio = wav_file.readframes(5 * wav_file.getframerate())
+#print(type(output_audio))
+#stream_out.write(output_audio)
+stream_out.write(input_audio)
